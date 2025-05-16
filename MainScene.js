@@ -188,30 +188,23 @@ showSiloModal(resources) {
 
         const modal = document.createElement('div');
         modal.className = 'silo-modal';
-        modal.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-            width: 80%;
-            max-width: 500px;
-        `;
         modal.innerHTML = `
             <div class="silo-content">
                 <div class="silo-header">
-                    <h2 class="silo-title">🏗️ Armazém de Recursos</h2>
-                    <button class="close-button">✕</button>
+                    <h2 class="silo-title">🏗️ Armazém</h2>
+                    <button class="close-silo-btn">✕</button>
                 </div>
                 <div class="resources-grid">
-                    ${resources.map(resource => `
+                    ${resources.map(res => `
                         <div class="resource-item">
-                            <div class="resource-icon">${resource.icon}</div>
-                            <div class="resource-name">${resource.name}</div>
-                            <div class="resource-amount">${resource.amount}</div>
+                            <div class="resource-icon">${res.icon}</div>
+                            <div class="resource-info">
+                                <div class="resource-name">${res.name}</div>
+                                <div class="resource-progress">
+                                    <div class="progress-bar" style="width: ${(res.amount / 100) * 100}%"></div>
+                                </div>
+                                <div class="resource-amount">${res.amount}/100</div>
+                            </div>
                         </div>
                     `).join('')}
                 </div>
