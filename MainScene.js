@@ -13,11 +13,11 @@ placeBuilding(gridX, gridY, worldX, worldY) {
     this.provideVisualFeedback(gridX, gridY);
 
     // Validar se é uma casa que pode ter NPC
-    const npcHouses = ['farmerHouse', 'minerHouse', 'fishermanHouse', 'lumberHouse'];
+    const npcHouses = ['farmerHouse', 'minerHouse', 'FishermanHouse', 'lumberHouse'];
     const isNPCHouse = npcHouses.includes(this.selectedBuilding);
 
     // Create NPC for each house if it's a valid house type
-    if (['farmerHouse', 'minerHouse', 'fishermanHouse', 'lumberHouse'].includes(this.selectedBuilding)) {
+    if (['farmerHouse', 'minerHouse', 'FishermanHouse', 'lumberHouse'].includes(this.selectedBuilding)) {
         this.createFarmerNPC(gridX, gridY, worldX, worldY);
     }
 
