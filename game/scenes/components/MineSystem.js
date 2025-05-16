@@ -293,24 +293,25 @@ export default class MineSystem {
         await this.waitFor(2000);
         if (!npc || !npc.inventory || typeof npc.inventory.ore === 'undefined') {
             console.log('[MineSystem] NPC inválido ou sem inventário');
-            return;
+            return false;
         }
 
         if (npc.inventory.ore > 0) {
             const amountToDeposit = npc.inventory.ore;
             
-            // Verifica espaço disponível antes de tentar depositar
-            if (!this.scene.resourceSystem.hasSiloSpace(silo.gridX, silo.gridY, 'ore', amountToDeposit)) {
-                console.log('[MineSystem] Silo sem espaço suficiente');
-                this.scene.showFeedback(`${npc.config.name}: Silo está cheio!`, false);
+            // Verifica se o silo existe e tem espaço
+            if (!silo || !this.scene.resourceSystem.hasSiloSpace(silo.gridX, silo.gridY, 'ore', amountToDeposit)) {
+                console.log('[MineSystem] Silo não encontrado ou sem espaço suficiente');
+                this.scene.showFeedback(`${npc.config.name}: Não foi possível depositar o minério!`, false);
+                this.updateNPCStatus(npc, '⚠️', 'Sem silo disponível');
                 npc.returnHome();
                 npc.currentJob = 'rest';
                 this.stopWorking(npc, false);
-                return;
+                return false;
             }
 
-            if (this.scene.resourceSystem && typeof this.scene.resourceSystem.depositResource === 'function') {
-                if (this.scene.resourceSystem.depositResource(silo.gridX, silo.gridY, 'ore', amountToDeposit)) {
+            // Tenta depositar o recurso
+            if (this.scene.resourceSystem && this.scene.resourceSystem.depositResource(silo.gridX, silo.gridY, 'ore', amountToDeposit)) {
                     // Garantir que só zeramos o inventário do NPC específico
                     npc.inventory.ore = 0;
 
@@ -409,9 +410,26 @@ export default class MineSystem {
         let shortestDistance = Infinity;
 
         for (const [key, value] of Object.entries(this.scene.grid.buildingGrid)) {
-            if (value.type === 'silo') { // Corrigido de buildingType para type
+            if (value.type === 'silo' || value.buildingType === 'silo') {
                 const [siloX, siloY] = key.split(',').map(Number);
                 const distance = Math.abs(npc.gridX - siloX) + Math.abs(npc.gridY - siloY);
+                
+                // Verifica se há espaço disponível no silo
+                if (this.scene.resourceSystem.hasSiloSpace(siloX, siloY, 'ore', npc.inventory.ore)) {
+                    if (distance < shortestDistance) {
+                        const adjacentPos = this.findBestAdjacentPosition(siloX, siloY);
+                        if (adjacentPos) {
+                            shortestDistance = distance;
+                            nearestSilo = {
+                                gridX: siloX,
+                                gridY: siloY,
+                                sprite: value.sprite,
+                                targetX: adjacentPos.x,
+                                targetY: adjacentPos.y
+                            };
+                        }
+                    }
+                }
 
                 if (distance < shortestDistance) {
                     const adjacentPos = this.findBestAdjacentPosition(siloX, siloY);
