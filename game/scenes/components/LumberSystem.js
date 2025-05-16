@@ -10,7 +10,8 @@ export default class LumberSystem {
             cuttingTime: 15000,
             respawnTime: 60000,
             searchRadius: 10,
-            maxInventory: 4
+            maxInventory: 4,
+            depositThreshold: 4
         };
 
         this.resources = {

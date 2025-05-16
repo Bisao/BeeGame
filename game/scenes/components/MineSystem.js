@@ -256,11 +256,11 @@ export default class MineSystem {
             if (this.scene.resourceSystem && typeof this.scene.resourceSystem.depositResource === 'function') {
                 if (this.scene.resourceSystem.depositResource(silo.gridX, silo.gridY, 'ore', amountToDeposit)) {
                     npc.inventory.ore = 0; // Zera o minério no inventário do NPC
-                    
+
                     // Atualiza recursos do silo
                     const siloResources = this.scene.resourceSystem.getSiloResources(silo.gridX, silo.gridY);
                     this.scene.updateSiloDisplay(silo.gridX, silo.gridY, siloResources);
-                    
+
                     this.scene.showFeedback(`${amountToDeposit} ${this.resources.ore} depositado por ${npc.config.name}!`, true);
 
                     // Efeito visual de depósito
@@ -425,13 +425,13 @@ export default class MineSystem {
     }
 
     updateInventoryUI(npc) {
-        // Esta função precisaria ser adaptada para como a UI do inventário do NPC é mostrada
-        // Exemplo: se o modal do NPC estiver aberto e for o NPC correto
         const modal = document.querySelector('.npc-modal');
         if (modal && modal.dataset.npcId === npc.id) {
-            const oreSlots = modal.querySelectorAll('.storage-slot .storage-icon'); // Seletor genérico
-            // Lógica para atualizar os slots de minério...
-            console.log(`[MineSystem] UI do inventário para ${npc.config.name} precisaria ser atualizada aqui.`);
+            const storageSlots = modal.querySelectorAll('.storage-slot');
+            storageSlots.forEach((slot, index) => {
+                const hasOre = index < npc.inventory.ore;
+                slot.querySelector('.storage-amount').textContent = hasOre ? '1/1' : '0/1';
+            });
         }
     }
 
