@@ -429,10 +429,6 @@ export default class MineSystem {
                             };
                         }
                     }
-                }
-
-                if (distance < shortestDistance) {
-                    const adjacentPos = this.findBestAdjacentPosition(siloX, siloY);
                     if (adjacentPos) {
                         shortestDistance = distance;
                         nearestSilo = { 
