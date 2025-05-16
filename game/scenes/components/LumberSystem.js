@@ -152,11 +152,17 @@ export default class LumberSystem {
 
     async depositResources(npc) {
         await this.waitFor(3000);
+        if (!npc || !npc.inventory || typeof npc.inventory.wood === 'undefined') {
+            console.log('[LumberSystem] NPC inválido ou sem inventário');
+            return;
+        }
+
         if (npc.inventory.wood > 0) {
             const amount = npc.inventory.wood;
             const silo = this.findNearestSilo(npc);
 
             if (silo && this.scene.resourceSystem.depositResource(silo.gridX, silo.gridY, 'wood', amount)) {
+                // Garantir que só zeramos o inventário do NPC específico
                 npc.inventory.wood = 0;
                 this.showResourceGain(npc, `+ ${amount} Madeira depositada!`);
                 this.updateInventoryUI(npc);
@@ -164,7 +170,7 @@ export default class LumberSystem {
                 this.scene.showFeedback('Silo cheio!', false);
                 npc.returnHome();
                 npc.currentJob = 'rest';
-                this.stopWorking();
+                this.stopWorking(npc);
                 return;
             }
         }

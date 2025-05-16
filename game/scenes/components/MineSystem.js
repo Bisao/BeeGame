@@ -293,12 +293,18 @@ export default class MineSystem {
     }
 
     async processDeposit(npc, silo) {
-        await this.waitFor(2000); // Tempo para simular o depósito
+        await this.waitFor(2000);
+        if (!npc || !npc.inventory || typeof npc.inventory.ore === 'undefined') {
+            console.log('[MineSystem] NPC inválido ou sem inventário');
+            return;
+        }
+
         if (npc.inventory.ore > 0) {
             const amountToDeposit = npc.inventory.ore;
             if (this.scene.resourceSystem && typeof this.scene.resourceSystem.depositResource === 'function') {
                 if (this.scene.resourceSystem.depositResource(silo.gridX, silo.gridY, 'ore', amountToDeposit)) {
-                    npc.inventory.ore = 0; // Zera o minério no inventário do NPC
+                    // Garantir que só zeramos o inventário do NPC específico
+                    npc.inventory.ore = 0;
 
                     // Atualiza recursos do silo
                     const siloResources = this.scene.resourceSystem.getSiloResources(silo.gridX, silo.gridY);
