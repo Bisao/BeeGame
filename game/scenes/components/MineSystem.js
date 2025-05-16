@@ -241,28 +241,25 @@ export default class MineSystem {
         }
 
         // Verifica se há espaço no silo antes de tentar mover
-        if (!this.scene.resourceSystem.hasSiloSpace(silo.gridX, silo.gridY, 'ore', npc.inventory.ore)) {
+        const hasSpace = this.scene.resourceSystem.hasSiloSpace(silo.gridX, silo.gridY, 'ore', npc.inventory.ore);
+        if (!hasSpace) {
             this.updateNPCStatus(npc, '⚠️', 'Silo Cheio');
             this.scene.showFeedback(`${npc.config.name}: Silo está cheio!`, false);
-            await this.waitFor(5000);
+            npc.returnHome();
+            npc.currentJob = 'rest';
+            this.stopWorking(npc, false);
             return;
         }
 
         this.updateNPCStatus(npc, '🚶', 'Indo ao Silo');
-        let attempts = 0;
-        let reached = false;
-
-        while (attempts < 3 && !reached) {
-            reached = await npc.moveTo(silo.targetX, silo.targetY);
-            if (!reached) {
-                attempts++;
-                const newPos = this.findAlternativePosition(silo.gridX, silo.gridY);
-                if (newPos) {
-                    silo.targetX = newPos.x;
-                    silo.targetY = newPos.y;
-                }
-            }
+        const adjacentPos = this.findBestAdjacentPosition(silo.gridX, silo.gridY);
+        
+        if (!adjacentPos) {
+            console.log('[MineSystem] Não há posições adjacentes disponíveis ao silo');
+            return;
         }
+
+        const reached = await npc.moveTo(adjacentPos.x, adjacentPos.y);
 
         if (reached && this.isAdjacentToSilo(npc, silo)) {
             this.updateNPCStatus(npc, '📦', 'Depositando Minério');
