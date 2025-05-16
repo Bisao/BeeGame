@@ -285,21 +285,35 @@ export default class MineSystem {
     }
 
     findBestAdjacentPosition(targetX, targetY) {
+        // Inclui posições diagonais para mais opções de movimento
         const positions = [
             {x: targetX + 1, y: targetY},
             {x: targetX - 1, y: targetY},
             {x: targetX, y: targetY + 1},
-            {x: targetX, y: targetY - 1}
+            {x: targetX, y: targetY - 1},
+            {x: targetX + 1, y: targetY + 1},
+            {x: targetX - 1, y: targetY - 1},
+            {x: targetX + 1, y: targetY - 1},
+            {x: targetX - 1, y: targetY + 1}
         ];
 
-        // Prioriza posições válidas e desocupadas
-        for (const pos of positions) {
+        // Primeiro tenta posições adjacentes diretas
+        for (const pos of positions.slice(0, 4)) {
             if (this.scene.grid.isValidPosition(pos.x, pos.y) && 
-                !this.scene.grid.isTileOccupiedByBuildingOrNPC(pos.x, pos.y, this.minerNPC)) { // Passa o NPC atual para evitar auto-colisão no planejamento
+                !this.scene.grid.isTileOccupiedByBuildingOrNPC(pos.x, pos.y, this.minerNPC)) {
                 return pos;
             }
         }
-        return null; // Retorna null se nenhuma posição adjacente válida for encontrada
+
+        // Se não encontrar posições diretas, tenta posições diagonais
+        for (const pos of positions.slice(4)) {
+            if (this.scene.grid.isValidPosition(pos.x, pos.y) && 
+                !this.scene.grid.isTileOccupiedByBuildingOrNPC(pos.x, pos.y, this.minerNPC)) {
+                return pos;
+            }
+        }
+
+        return null;
     }
     
     findNearestSilo(npc) {
