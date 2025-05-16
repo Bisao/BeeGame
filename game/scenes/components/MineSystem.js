@@ -298,6 +298,17 @@ export default class MineSystem {
 
         if (npc.inventory.ore > 0) {
             const amountToDeposit = npc.inventory.ore;
+            
+            // Verifica espaço disponível antes de tentar depositar
+            if (!this.scene.resourceSystem.hasSiloSpace(silo.gridX, silo.gridY, 'ore', amountToDeposit)) {
+                console.log('[MineSystem] Silo sem espaço suficiente');
+                this.scene.showFeedback(`${npc.config.name}: Silo está cheio!`, false);
+                npc.returnHome();
+                npc.currentJob = 'rest';
+                this.stopWorking(npc, false);
+                return;
+            }
+
             if (this.scene.resourceSystem && typeof this.scene.resourceSystem.depositResource === 'function') {
                 if (this.scene.resourceSystem.depositResource(silo.gridX, silo.gridY, 'ore', amountToDeposit)) {
                     // Garantir que só zeramos o inventário do NPC específico
@@ -398,7 +409,7 @@ export default class MineSystem {
         let shortestDistance = Infinity;
 
         for (const [key, value] of Object.entries(this.scene.grid.buildingGrid)) {
-            if (value.buildingType === 'silo') {
+            if (value.type === 'silo') { // Corrigido de buildingType para type
                 const [siloX, siloY] = key.split(',').map(Number);
                 const distance = Math.abs(npc.gridX - siloX) + Math.abs(npc.gridY - siloY);
 
@@ -417,6 +428,11 @@ export default class MineSystem {
                 }
             }
         }
+        
+        if (!nearestSilo) {
+            console.log('[MineSystem] Nenhum silo encontrado no grid');
+        }
+        
         return nearestSilo;
     }
 
