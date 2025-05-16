@@ -290,25 +290,60 @@ export default class MineSystem {
     }
 
     async processDeposit(npc, silo) {
+        if (!this.validateDeposit(npc, silo)) return false;
+        
         await this.waitFor(2000);
-        if (!npc || !npc.inventory || typeof npc.inventory.ore === 'undefined') {
-            console.log('[MineSystem] NPC inválido ou sem inventário');
+        const amountToDeposit = npc.inventory.ore;
+            
+        if (this.scene.resourceSystem.depositResource(silo.gridX, silo.gridY, 'ore', amountToDeposit)) {
+            npc.inventory.ore = 0;
+            this.scene.showFeedback(`${amountToDeposit} ${this.resources.ore} depositado por ${npc.config.name}!`, true);
+            this.createDepositEffect(silo);
+            this.updateInventoryUI(npc);
+            return true;
+        }
+        
+        this.handleDepositFailure(npc);
+        return false;
+    }
+
+    validateDeposit(npc, silo) {
+        if (!npc?.inventory?.ore) {
+            console.log('[MineSystem] NPC inválido ou sem minério');
             return false;
         }
 
-        if (npc.inventory.ore > 0) {
-            const amountToDeposit = npc.inventory.ore;
-            
-            // Verifica se o silo existe e tem espaço
-            if (!silo || !this.scene.resourceSystem.hasSiloSpace(silo.gridX, silo.gridY, 'ore', amountToDeposit)) {
-                console.log('[MineSystem] Silo não encontrado ou sem espaço suficiente');
-                this.scene.showFeedback(`${npc.config.name}: Não foi possível depositar o minério!`, false);
-                this.updateNPCStatus(npc, '⚠️', 'Sem silo disponível');
-                npc.returnHome();
-                npc.currentJob = 'rest';
-                this.stopWorking(npc, false);
-                return false;
-            }
+        if (!silo || !this.scene.resourceSystem.hasSiloSpace(silo.gridX, silo.gridY, 'ore', npc.inventory.ore)) {
+            console.log('[MineSystem] Silo não encontrado ou sem espaço suficiente');
+            this.handleDepositFailure(npc);
+            return false;
+        }
+
+        return true;
+    }
+
+    handleDepositFailure(npc) {
+        this.scene.showFeedback(`${npc.config.name}: Não foi possível depositar o minério!`, false);
+        this.updateNPCStatus(npc, '⚠️', 'Sem silo disponível');
+        npc.returnHome();
+        npc.currentJob = 'rest';
+        this.stopWorking(npc, false);
+    }
+
+    createDepositEffect(silo) {
+        const depositEffect = this.scene.add.particles(0, 0, 'tile_grass', {
+            x: silo.sprite.x,
+            y: silo.sprite.y - 20,
+            speed: { min: 50, max: 100 },
+            scale: { start: 0.2, end: 0 },
+            alpha: { start: 0.6, end: 0 },
+            lifespan: 800,
+            quantity: 5
+        });
+
+        depositEffect.start();
+        this.scene.time.delayedCall(800, () => depositEffect.destroy());
+    }
 
             // Tenta depositar o recurso
             if (this.scene.resourceSystem && this.scene.resourceSystem.depositResource(silo.gridX, silo.gridY, 'ore', amountToDeposit)) {
@@ -411,11 +446,10 @@ export default class MineSystem {
         let shortestDistance = Infinity;
 
         for (const [key, value] of Object.entries(this.scene.grid.buildingGrid)) {
-            if (value.type === 'silo' || value.buildingType === 'silo') {
+            if (value.type === 'silo') {
                 const [siloX, siloY] = key.split(',').map(Number);
                 const distance = Math.abs(npc.gridX - siloX) + Math.abs(npc.gridY - siloY);
                 
-                // Verifica se há espaço disponível no silo
                 if (this.scene.resourceSystem.hasSiloSpace(siloX, siloY, 'ore', npc.inventory.ore)) {
                     const adjacentPos = this.findBestAdjacentPosition(siloX, siloY);
                     if (adjacentPos && distance < shortestDistance) {
@@ -426,13 +460,6 @@ export default class MineSystem {
                             sprite: value.sprite,
                             targetX: adjacentPos.x,
                             targetY: adjacentPos.y
-                        };
-                    } 
-                            gridX: siloX, 
-                            gridY: siloY, 
-                            sprite: value.sprite, 
-                            targetX: adjacentPos.x, 
-                            targetY: adjacentPos.y 
                         };
                     }
                 }
