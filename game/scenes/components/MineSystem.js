@@ -131,17 +131,17 @@ export default class MineSystem {
             const [rockX, rockY] = key.split(',').map(Number);
             const distance = Math.abs(npc.gridX - rockX) + Math.abs(npc.gridY - rockY);
 
-            if (distance < shortestDistance && distance <= this.config.searchRadius) {
+            if (distance <= this.config.searchRadius) {
                 const adjacentPos = this.findBestAdjacentPosition(rockX, rockY);
-                if (adjacentPos) {
+                if (adjacentPos && distance < shortestDistance) {
                     shortestDistance = distance;
                     nearestRock = {
                         gridX: rockX,
                         gridY: rockY,
-                        targetX: adjacentPos.x, // Posição adjacente para o NPC ir
+                        targetX: adjacentPos.x,
                         targetY: adjacentPos.y,
                         sprite: value.sprite,
-                        key: key // Chave do grid para acessar a rocha
+                        key: key
                     };
                 }
             }
@@ -182,15 +182,34 @@ export default class MineSystem {
             return false;
         }
 
-        rockData.isMined = true; // Marca a rocha como minerada
-        if (rockData.sprite) {
-            rockData.sprite.setVisible(false); // Esconde a rocha
+        if (!this.isAdjacentToRock(npc, rockData)) {
+            console.log("[MineSystem] NPC não está adjacente à rocha.");
+            return false;
         }
 
-        if (npc.addItemToStorage('ore', 1)) { // Adiciona 1 minério ao inventário
+        rockData.isMined = true;
+        if (rockData.sprite) {
+            rockData.sprite.setVisible(false);
+            
+            // Efeito de partículas ao minerar
+            const particles = this.scene.add.particles(0, 0, 'tile_grass', {
+                x: rockData.sprite.x,
+                y: rockData.sprite.y,
+                speed: { min: 50, max: 100 },
+                scale: { start: 0.2, end: 0 },
+                alpha: { start: 0.6, end: 0 },
+                lifespan: 800,
+                quantity: 5
+            });
+            
+            particles.start();
+            this.scene.time.delayedCall(800, () => particles.destroy());
+        }
+
+        if (npc.addItemToStorage('ore')) {
             this.scene.showFeedback(`+1 ${this.resources.ore} coletado por ${npc.config.name}!`, true);
-            this.updateInventoryUI(npc); // Atualiza a UI do inventário se existir
-            this.scheduleRockRespawn(rockData); // Agenda o respawn da rocha
+            this.updateInventoryUI(npc);
+            this.scheduleRockRespawn(rockData);
             return true;
         }
         return false;
