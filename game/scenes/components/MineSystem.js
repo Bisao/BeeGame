@@ -57,9 +57,11 @@ export default class MineSystem {
                     await this.depositOre(npc); // Deposita minério se o inventário estiver cheio
                     // Se após depositar ainda estiver cheio (ex: silo cheio), espera antes de tentar de novo
                     if (npc.inventory.ore >= this.config.maxInventory) {
-                        this.updateNPCStatus(npc, '⏳', 'Silo cheio');
-                        await this.waitFor(10000); // Espera mais tempo se o silo estiver cheio
-                        continue;
+                        this.updateNPCStatus(npc, '⚠️', 'Silo cheio');
+                        npc.returnHome();
+                        npc.currentJob = 'rest';
+                        this.stopWorking(npc, false);
+                        return;
                     }
                 }
 

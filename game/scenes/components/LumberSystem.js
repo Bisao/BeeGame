@@ -155,13 +155,17 @@ export default class LumberSystem {
         if (npc.inventory.wood > 0) {
             const amount = npc.inventory.wood;
             const silo = this.findNearestSilo(npc);
-            
+
             if (silo && this.scene.resourceSystem.depositResource(silo.gridX, silo.gridY, 'wood', amount)) {
                 npc.inventory.wood = 0;
                 this.showResourceGain(npc, `+ ${amount} Madeira depositada!`);
                 this.updateInventoryUI(npc);
             } else {
-                this.showResourceGain(npc, 'Silo cheio!');
+                this.scene.showFeedback('Silo cheio!', false);
+                npc.returnHome();
+                npc.currentJob = 'rest';
+                this.stopWorking();
+                return;
             }
         }
     }
@@ -329,10 +333,10 @@ export default class LumberSystem {
         // Adicionar madeira ao inventário
         if (npc.addItemToStorage('wood')) {
             this.showResourceGain(npc, '+1 ' + this.resources.wood);
-            
+
             // Atualizar UI do inventário
             this.updateInventoryUI(npc);
-            
+
             // Agendar respawn da árvore
             this.scheduleTreeRespawn(treeData);
             return true;
