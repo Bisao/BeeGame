@@ -106,7 +106,7 @@ export default class MineSystem {
         }
 
         this.updateNPCStatus(npc, '🚶', 'Indo até a Rocha');
-        const reached = await npc.moveTo(rock.targetX, rock.targetY); // Usa o moveTo do BaseNPC
+        const reached = await this.moveToRock(npc, rock);
 
         if (!reached) {
             console.log('[MineSystem] Não foi possível alcançar a rocha.');
@@ -285,35 +285,27 @@ export default class MineSystem {
     }
 
     findBestAdjacentPosition(targetX, targetY) {
-        // Inclui posições diagonais para mais opções de movimento
         const positions = [
             {x: targetX + 1, y: targetY},
             {x: targetX - 1, y: targetY},
             {x: targetX, y: targetY + 1},
-            {x: targetX, y: targetY - 1},
-            {x: targetX + 1, y: targetY + 1},
-            {x: targetX - 1, y: targetY - 1},
-            {x: targetX + 1, y: targetY - 1},
-            {x: targetX - 1, y: targetY + 1}
+            {x: targetX, y: targetY - 1}
         ];
 
-        // Primeiro tenta posições adjacentes diretas
-        for (const pos of positions.slice(0, 4)) {
-            if (this.scene.grid.isValidPosition(pos.x, pos.y) && 
-                !this.scene.grid.isTileOccupiedByBuildingOrNPC(pos.x, pos.y, this.minerNPC)) {
-                return pos;
-            }
-        }
+        return positions.find(pos => 
+            this.scene.grid.isValidPosition(pos.x, pos.y) && 
+            !this.scene.grid.isTileOccupiedByBuildingOrNPC(pos.x, pos.y, this.minerNPC)
+        );
+    }
 
-        // Se não encontrar posições diretas, tenta posições diagonais
-        for (const pos of positions.slice(4)) {
-            if (this.scene.grid.isValidPosition(pos.x, pos.y) && 
-                !this.scene.grid.isTileOccupiedByBuildingOrNPC(pos.x, pos.y, this.minerNPC)) {
-                return pos;
-            }
-        }
+    async moveToRock(npc, rock) {
+        if (!rock) return false;
 
-        return null;
+        const adjacentPos = this.findBestAdjacentPosition(rock.gridX, rock.gridY);
+        if (!adjacentPos) return false;
+
+        await npc.moveTo(adjacentPos.x, adjacentPos.y);
+        return this.isAdjacentToRock(npc, rock);
     }
     
     findNearestSilo(npc) {
