@@ -350,35 +350,9 @@ export default class MineSystem {
                     // Garantir que só zeramos o inventário do NPC específico
                     npc.inventory.ore = 0;
 
-                    // Atualiza recursos do silo
-                    const siloResources = this.scene.resourceSystem.getSiloResources(silo.gridX, silo.gridY);
-                    this.scene.updateSiloDisplay(silo.gridX, silo.gridY, siloResources);
-
-                    this.scene.showFeedback(`${amountToDeposit} ${this.resources.ore} depositado por ${npc.config.name}!`, true);
-
-                    // Efeito visual de depósito
-                    const depositEffect = this.scene.add.particles(0, 0, 'tile_grass', {
-                        x: silo.sprite.x,
-                        y: silo.sprite.y - 20,
-                        speed: { min: 50, max: 100 },
-                        scale: { start: 0.2, end: 0 },
-                        alpha: { start: 0.6, end: 0 },
-                        lifespan: 800,
-                        quantity: 5
-                    });
-
-                    depositEffect.start();
-                    this.scene.time.delayedCall(800, () => depositEffect.destroy());
-
-                    this.updateInventoryUI(npc);
-                } else {
-                    this.scene.showFeedback('Silo de minério cheio!', false);
-                }
-            } else {
-                console.error("[MineSystem] ResourceSystem ou depositResource não encontrado na cena.");
+                    }
             }
         }
-    }
 
     // --- Métodos Auxiliares ---
     validateNPC(npc) {
