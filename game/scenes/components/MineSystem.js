@@ -416,22 +416,17 @@ export default class MineSystem {
                 
                 // Verifica se há espaço disponível no silo
                 if (this.scene.resourceSystem.hasSiloSpace(siloX, siloY, 'ore', npc.inventory.ore)) {
-                    if (distance < shortestDistance) {
-                        const adjacentPos = this.findBestAdjacentPosition(siloX, siloY);
-                        if (adjacentPos) {
-                            shortestDistance = distance;
-                            nearestSilo = {
-                                gridX: siloX,
-                                gridY: siloY,
-                                sprite: value.sprite,
-                                targetX: adjacentPos.x,
-                                targetY: adjacentPos.y
-                            };
-                        }
-                    }
-                    if (adjacentPos) {
+                    const adjacentPos = this.findBestAdjacentPosition(siloX, siloY);
+                    if (adjacentPos && distance < shortestDistance) {
                         shortestDistance = distance;
-                        nearestSilo = { 
+                        nearestSilo = {
+                            gridX: siloX,
+                            gridY: siloY,
+                            sprite: value.sprite,
+                            targetX: adjacentPos.x,
+                            targetY: adjacentPos.y
+                        };
+                    } 
                             gridX: siloX, 
                             gridY: siloY, 
                             sprite: value.sprite, 
