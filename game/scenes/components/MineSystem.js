@@ -234,19 +234,60 @@ export default class MineSystem {
         if (!silo) {
             console.log('[MineSystem] Nenhum silo encontrado para depósito.');
             this.updateNPCStatus(npc, '⚠️', 'Sem Silo');
-            await this.waitFor(10000); // Espera mais se não houver silo
+            await this.waitFor(10000);
+            return;
+        }
+
+        // Verifica se há espaço no silo antes de tentar mover
+        if (!this.scene.resourceSystem.hasSiloSpace(silo.gridX, silo.gridY, 'ore', npc.inventory.ore)) {
+            this.updateNPCStatus(npc, '⚠️', 'Silo Cheio');
+            this.scene.showFeedback(`${npc.config.name}: Silo está cheio!`, false);
+            await this.waitFor(5000);
             return;
         }
 
         this.updateNPCStatus(npc, '🚶', 'Indo ao Silo');
-        const reached = await npc.moveTo(silo.targetX, silo.targetY);
+        let attempts = 0;
+        let reached = false;
+
+        while (attempts < 3 && !reached) {
+            reached = await npc.moveTo(silo.targetX, silo.targetY);
+            if (!reached) {
+                attempts++;
+                const newPos = this.findAlternativePosition(silo.gridX, silo.gridY);
+                if (newPos) {
+                    silo.targetX = newPos.x;
+                    silo.targetY = newPos.y;
+                }
+            }
+        }
 
         if (reached && this.isAdjacentToSilo(npc, silo)) {
             this.updateNPCStatus(npc, '📦', 'Depositando Minério');
             await this.processDeposit(npc, silo);
         } else {
-            console.log('[MineSystem] Não foi possível alcançar o silo para depósito.');
+            console.log('[MineSystem] Não foi possível alcançar o silo após várias tentativas.');
+            this.scene.showFeedback(`${npc.config.name} não consegue alcançar o silo!`, false);
+            await this.waitFor(3000);
         }
+    }
+
+    findAlternativePosition(siloX, siloY) {
+        const positions = [
+            {x: siloX + 1, y: siloY},
+            {x: siloX - 1, y: siloY},
+            {x: siloX, y: siloY + 1},
+            {x: siloX, y: siloY - 1},
+            {x: siloX + 1, y: siloY + 1},
+            {x: siloX - 1, y: siloY - 1},
+            {x: siloX + 1, y: siloY - 1},
+            {x: siloX - 1, y: siloY + 1}
+        ];
+
+        return positions.find(pos => 
+            this.scene.grid.isValidPosition(pos.x, pos.y) && 
+            !this.scene.grid.isTileOccupiedByBuildingOrNPC(pos.x, pos.y)
+        );
     }
 
     async processDeposit(npc, silo) {
