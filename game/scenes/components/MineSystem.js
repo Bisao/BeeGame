@@ -62,7 +62,7 @@ export default class MineSystem {
                         continue;
                     }
                 }
-                
+
                 const rock = await this.findAndProcessRock(npc);
                 if (!rock) {
                     // Se não encontrar rochas, o NPC pode descansar ou esperar
@@ -190,7 +190,7 @@ export default class MineSystem {
         rockData.isMined = true;
         if (rockData.sprite) {
             rockData.sprite.setVisible(false);
-            
+
             // Efeito de partículas ao minerar
             const particles = this.scene.add.particles(0, 0, 'tile_grass', {
                 x: rockData.sprite.x,
@@ -201,7 +201,7 @@ export default class MineSystem {
                 lifespan: 800,
                 quantity: 5
             });
-            
+
             particles.start();
             this.scene.time.delayedCall(800, () => particles.destroy());
         }
@@ -257,6 +257,21 @@ export default class MineSystem {
                 if (this.scene.resourceSystem.depositResource(silo.gridX, silo.gridY, 'ore', amountToDeposit)) {
                     npc.inventory.ore = 0; // Zera o minério no inventário do NPC
                     this.scene.showFeedback(`${amountToDeposit} ${this.resources.ore} depositado por ${npc.config.name}!`, true);
+
+                    // Efeito visual de depósito
+                    const depositEffect = this.scene.add.particles(0, 0, 'tile_grass', {
+                        x: silo.sprite.x,
+                        y: silo.sprite.y - 20,
+                        speed: { min: 50, max: 100 },
+                        scale: { start: 0.2, end: 0 },
+                        alpha: { start: 0.6, end: 0 },
+                        lifespan: 800,
+                        quantity: 5
+                    });
+
+                    depositEffect.start();
+                    this.scene.time.delayedCall(800, () => depositEffect.destroy());
+
                     this.updateInventoryUI(npc);
                 } else {
                     this.scene.showFeedback('Silo de minério cheio!', false);
@@ -326,7 +341,7 @@ export default class MineSystem {
         await npc.moveTo(adjacentPos.x, adjacentPos.y);
         return this.isAdjacentToRock(npc, rock);
     }
-    
+
     findNearestSilo(npc) {
         let nearestSilo = null;
         let shortestDistance = Infinity;
@@ -419,4 +434,3 @@ export default class MineSystem {
         return new Promise(resolve => this.scene.time.delayedCall(ms, resolve));
     }
 }
-
