@@ -256,6 +256,11 @@ export default class MineSystem {
             if (this.scene.resourceSystem && typeof this.scene.resourceSystem.depositResource === 'function') {
                 if (this.scene.resourceSystem.depositResource(silo.gridX, silo.gridY, 'ore', amountToDeposit)) {
                     npc.inventory.ore = 0; // Zera o minério no inventário do NPC
+                    
+                    // Atualiza recursos do silo
+                    const siloResources = this.scene.resourceSystem.getSiloResources(silo.gridX, silo.gridY);
+                    this.scene.updateSiloDisplay(silo.gridX, silo.gridY, siloResources);
+                    
                     this.scene.showFeedback(`${amountToDeposit} ${this.resources.ore} depositado por ${npc.config.name}!`, true);
 
                     // Efeito visual de depósito
