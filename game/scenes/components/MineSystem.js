@@ -351,6 +351,7 @@ export default class MineSystem {
             console.warn('[MineSystem] NPC inválido ou não é um Minerador.');
             return false;
         }
+    }revise o minersystem
         if (!npc.inventory || typeof npc.inventory.ore === 'undefined') {
             console.warn('[MineSystem] Inventário do NPC não está configurado para minério.');
             npc.inventory = npc.inventory || {}; // Garante que o inventário exista
